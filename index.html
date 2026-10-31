@@ -1,0 +1,513 @@
+<!DOCTYPE html>
+<html lang="az">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>BUILD A WELFARE STATE</title>
+
+<style>
+*{box-sizing:border-box}
+body{
+ margin:0;padding:15px;
+ font-family:Arial,sans-serif;color:white;
+ background:linear-gradient(145deg,#102d43,#126b76,#153d55);
+ min-height:100vh;
+}
+.container{max-width:900px;margin:auto}
+header{text-align:center;padding:15px 0}
+h1{font-size:31px;color:#ffe477;letter-spacing:2px;margin:10px 0}
+.subtitle{color:#d0f5ee}
+.panel{
+ background:#ffffff12;
+ border:1px solid #ffffff30;
+ border-radius:20px;
+ padding:17px;margin-bottom:15px;
+ box-shadow:0 8px 25px #0003;
+}
+.center{text-align:center}
+.hidden{display:none!important}
+.name-input{
+ width:100%;padding:14px;margin:8px 0;
+ border:0;border-radius:12px;font-size:16px;
+}
+.main{
+ width:100%;padding:15px;border:0;
+ border-radius:13px;margin-top:12px;
+ background:linear-gradient(90deg,#ffd65a,#ff9b5c);
+ color:#26343a;font-weight:bold;font-size:16px;
+ cursor:pointer;
+}
+.players{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.player{
+ text-align:center;padding:13px;
+ background:#ffffff15;border-radius:14px;
+ border:2px solid transparent;overflow-wrap:anywhere;
+}
+.player.active{border-color:#ffe477}
+.score{font-size:28px;font-weight:bold;margin:7px}
+.blue{color:#72dcff}.pink{color:#ffb0d3}
+.city-title{text-align:center;color:#ffe477}
+.city{
+ display:grid;
+ grid-template-columns:repeat(4,1fr);
+ gap:7px;
+ background:#183b48;
+ padding:10px;
+ border-radius:14px;
+}
+.building{
+ aspect-ratio:1;
+ display:flex;align-items:center;justify-content:center;
+ flex-direction:column;
+ background:#315c65;border-radius:10px;
+ font-size:28px;
+ border:1px solid #ffffff25;
+ animation:appear .4s ease;
+}
+.building small{font-size:9px;color:#fff;text-align:center}
+@keyframes appear{
+ from{transform:scale(.5);opacity:0}
+ to{transform:scale(1);opacity:1}
+}
+.city-blank{
+ color:#ffffff35;font-size:25px;
+}
+.progress{
+ height:9px;background:#ffffff25;
+ border-radius:10px;overflow:hidden;margin:12px 0;
+}
+#bar{height:100%;width:0;background:#ffe477;transition:.3s}
+#timer{font-size:25px;color:#ffe477;font-weight:bold}
+.question{font-size:19px;line-height:1.5;margin:18px 0;font-weight:bold}
+.options{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.option{
+ padding:14px;border-radius:12px;
+ background:#ffffff15;color:white;
+ border:1px solid #ffffff35;
+ text-align:left;font-size:14px;min-height:65px;
+ cursor:pointer;
+}
+.option:disabled{opacity:.85}
+.correct{background:#137c57!important;border-color:#60e8a9!important}
+.wrong{background:#a33c50!important;border-color:#ff91a5!important}
+#feedback{min-height:45px;line-height:1.5;margin-top:13px}
+.notice{font-size:13px;color:#ffe477;line-height:1.5}
+.building-list{
+ display:grid;grid-template-columns:repeat(3,1fr);
+ gap:8px;margin-top:12px;
+}
+.building-card{
+ background:#ffffff12;border-radius:10px;
+ padding:10px;text-align:center;font-size:12px;
+}
+@media(max-width:500px){
+ h1{font-size:25px}
+ .options{grid-template-columns:1fr}
+ .panel{padding:13px}
+ .building{font-size:23px}
+}
+</style>
+</head>
+
+<body>
+<div class="container">
+
+<header>
+ <div style="font-size:45px">🏙️ 🌳 🏥</div>
+ <h1>BUILD A WELFARE STATE</h1>
+ <div class="subtitle">Biliklə rifah dövləti qur!</div>
+</header>
+
+<!-- BAŞLANĞIC -->
+<div id="startScreen" class="panel center">
+ <h2>🏗️ Öz şəhərini qurmağa hazırsan?</h2>
+ <p>İki yarışmaçı öz rifah dövlətini inkişaf etdirəcək.</p>
+
+ <input id="name1" class="name-input"
+ placeholder="🔵 Birinci oyunçunun adı" maxlength="18">
+
+ <input id="name2" class="name-input"
+ placeholder="🟠 İkinci oyunçunun adı" maxlength="18">
+
+ <p class="notice">
+  15 sual • Hər suala 25 saniyə
+  <br>Düzgün cavab = yeni sosial obyekt!
+ </p>
+
+ <button class="main" onclick="startGame()">ŞƏHƏRİMİ QUR!</button>
+</div>
+
+<!-- OYUN -->
+<div id="gameScreen" class="hidden">
+
+ <div class="panel">
+  <div class="players">
+   <div class="player" id="player1">
+    <b id="display1" class="blue">🔵 Oyunçu 1</b>
+    <div class="score" id="score1">0</div>
+    <small>Şəhər obyektləri</small>
+   </div>
+
+   <div class="player" id="player2">
+    <b id="display2" class="pink">🟠 Oyunçu 2</b>
+    <div class="score" id="score2">0</div>
+    <small>Şəhər obyektləri</small>
+   </div>
+  </div>
+ </div>
+
+ <div class="panel">
+  <h3 class="city-title">🏙️ <span id="cityName">ŞƏHƏR</span></h3>
+  <div class="city" id="city"></div>
+  <p class="notice center">Düzgün cavablar şəhərinə yeni binalar qazandırır.</p>
+ </div>
+
+ <div class="panel">
+  <div style="display:flex;justify-content:space-between;align-items:center">
+   <b id="round">Sual 1 / 15</b>
+   <span id="timer">25 saniyə</span>
+  </div>
+
+  <div class="progress"><div id="bar"></div></div>
+
+  <div class="center notice" id="turnText"></div>
+  <div class="question" id="question"></div>
+  <div class="options" id="options"></div>
+  <div id="feedback"></div>
+
+  <button id="nextBtn" class="main hidden" onclick="nextTurn()">
+   NÖVBƏTİ OYUNÇU
+  </button>
+ </div>
+
+</div>
+
+<!-- NƏTİCƏ -->
+<div id="endScreen" class="panel center hidden">
+ <div style="font-size:65px">🏆</div>
+ <h2>ŞƏHƏRLƏRİN YARIŞI BİTDİ!</h2>
+ <h1 id="winner"></h1>
+ <p id="finalScores"></p>
+
+ <h3>🏙️ Şəhərlərin inkişafı</h3>
+ <div class="players">
+  <div class="building-card">
+   <b id="finalName1"></b>
+   <div id="finalCity1" class="city"></div>
+  </div>
+  <div class="building-card">
+   <b id="finalName2"></b>
+   <div id="finalCity2" class="city"></div>
+  </div>
+ </div>
+
+ <button class="main" onclick="location.reload()">YENİ OYUN</button>
+</div>
+
+</div>
+
+<script>
+const questions = [
+{
+q:"Liberal sosial siyasət modelinin əsas xüsusiyyəti hansıdır?",
+a:["Dövlətin bütün xidmətləri pulsuz təmin etməsi","Bazar mexanizminə və fərdi məsuliyyətə üstünlük verilməsi","Ailənin bütün sosial təminatı öz üzərinə götürməsi","Bütün gəlirlərin bərabər bölüşdürülməsi"],
+c:1,e:"Liberal modeldə bazar və fərdi məsuliyyət əsas rol oynayır."
+},
+{
+q:"Skandinaviya sosial siyasət modeli hansı modelə aiddir?",
+a:["Liberal","Korporativ","Sosial-demokratik","Aralıq dənizi"],
+c:2,e:"Skandinaviya modeli sosial-demokratik model kimi tanınır."
+},
+{
+q:"Bismark sosial təminat modelinin əsasında nə dayanır?",
+a:["Sosial sığorta və əmək fəaliyyəti","Yalnız könüllü yardımlar","Ailə münasibətləri","Yalnız dövlət büdcəsi"],
+c:0,e:"Bismark modeli əmək fəaliyyəti və sığorta ödənişlərinə əsaslanır."
+},
+{
+q:"Bir ölkədə sosial təminat əsasən əmək fəaliyyəti və sığorta ödənişləri ilə əlaqələndirilirsə, bu nə ilə nəticələnə bilər?",
+a:["İşləməyən şəxslərin təminat imkanlarının daha məhdud olması","Bütün şəxslərin eyni məbləğdə müavinət alması","Ailənin sosial təminatda rolunun tamamilə aradan qalxması","Bütün xidmətlərin yalnız özəl sektor tərəfindən göstərilməsi"],
+c:0,e:"Bismark modelində təminat çox vaxt əmək fəaliyyəti və sığorta stajı ilə bağlıdır."
+},
+{
+q:"Sosial-demokratik modeldə sosial xidmətlər necə təqdim olunur?",
+a:["Yalnız yüksək gəlirli şəxslərə","Yalnız işləyən şəxslərə","Geniş əhali qruplarına universal şəkildə","Yalnız özəl təşkilatlar vasitəsilə"],
+c:2,e:"Bu modeldə xidmətlər geniş əhali qrupları üçün əlçatan olmalıdır."
+},
+{
+q:"Liberal modeldə dövlətin sosial siyasətdə rolu necədir?",
+a:["Məhdud və əsasən ehtiyacı olanlara yönəlmiş","Bütün xidmətləri birbaşa idarə edən","Sosial müdafiədən tamamilə imtina edən","Bütün müəssisələri dövlətləşdirən"],
+c:0,e:"Liberal modeldə dövlətin müdaxiləsi nisbətən məhduddur."
+},
+{
+q:"Konservativ-korporativ modeldə sosial təminat əsasən nədən asılıdır?",
+a:["Şəxsin yaşadığı şəhərdən","Əmək fəaliyyəti və sığorta statusundan","Yalnız könüllü yardımlardan","Ailə üzvlərinin sayından"],
+c:1,e:"Bu modeldə sosial hüquqlar çox vaxt məşğulluq və sığorta statusu ilə bağlıdır."
+},
+{
+q:"Aralıq dənizi modelində sosial müdafiədə hansı qurumun rolu daha güclüdür?",
+a:["Yalnız beynəlxalq təşkilatların","Yalnız özəl şirkətlərin","Ailənin","Yalnız bələdiyyələrin"],
+c:2,e:"Aralıq dənizi modelində ailə sosial dəstəyin mühüm mənbəyidir."
+},
+{
+q:"Sosial-demokratik modelin əsas məqsədlərindən biri nədir?",
+a:["Sosial bərabərsizliyi azaltmaq","Dövlətin sosial rolunu tam ləğv etmək","Yalnız varlıları müdafiə etmək","Sosial xidmətləri məhdudlaşdırmaq"],
+c:0,e:"Bu model sosial ədalət və bərabər imkanları gücləndirməyə çalışır."
+},
+{
+q:"Liberal sosial siyasət modelinə nümunə kimi hansı ölkə göstərilir?",
+a:["İsveç","Norveç","ABŞ","Danimarka"],
+c:2,e:"ABŞ liberal sosial siyasət modelinə nümunə kimi göstərilir."
+},
+{
+q:"Sosial-demokratik modelin maliyyələşdirilməsində əsas mənbə hansıdır?",
+a:["Yalnız ailə büdcəsi","Vergilər və dövlət büdcəsi","Yalnız şəxsi ianələr","Yalnız xarici kreditlər"],
+c:1,e:"Universal xidmətlər əsasən vergilər və dövlət büdcəsi hesabına maliyyələşdirilir."
+},
+{
+q:"Sosial siyasət modelləri bir-birindən əsasən hansı amillərə görə fərqlənir?",
+a:["Əhalinin dilinə görə","Ölkənin coğrafi ölçüsünə görə","Dövlət, bazar və ailənin iştirak səviyyəsinə görə","Ölkədəki şəhərlərin sayına görə"],
+c:2,e:"Modellərdə dövlətin, bazarın və ailənin sosial təminatdakı rolu fərqlənir."
+},
+{
+q:"Bismark sosial sığorta modelinin tarixi mənşəyi hansı ölkə ilə bağlıdır?",
+a:["İtaliya","Almaniya","İsveç","ABŞ"],
+c:1,e:"Bismark modeli Almaniyada formalaşmışdır."
+},
+{
+q:"Universal sosial təminat nə deməkdir?",
+a:["Yalnız işsizlərə yardım göstərilməsi","Yalnız pensiya yaşında olanların müdafiəsi","Yalnız aşağı gəlirli ailələrin dəstəklənməsi","Xidmət və təminatların geniş əhali qruplarına təqdim olunması"],
+c:3,e:"Universal təminat geniş əhali qruplarını əhatə edir."
+},
+{
+q:"Azərbaycan üçün sosial siyasət modelinin seçilməsində hansı yanaşma daha məqsədəuyğundur?",
+a:["Bir ölkənin modelini tamamilə dəyişmədən köçürmək","Müxtəlif modellərin müsbət cəhətlərini yerli şəraitə uyğunlaşdırmaq","Dövlətin sosial müdafiə rolunu tam azaltmaq","Ailəni yeganə sosial təminat mənbəyinə çevirmək"],
+c:1,e:"Azərbaycan öz iqtisadi və sosial xüsusiyyətlərinə uyğun müxtəlif modellərin müsbət tərəflərindən istifadə edə bilər."
+}
+];
+
+const buildings=[
+ {icon:"🏥",name:"Xəstəxana"},
+ {icon:"🏫",name:"Məktəb"},
+ {icon:"🏡",name:"Sosial ev"},
+ {icon:"🌳",name:"Park"},
+ {icon:"👶",name:"Uşaq mərkəzi"},
+ {icon:"🤝",name:"Sosial xidmət"},
+ {icon:"🏛️",name:"Dövlət idarəsi"},
+ {icon:"🚑",name:"Təcili yardım"},
+ {icon:"📚",name:"Kitabxana"},
+ {icon:"♿",name:"Reabilitasiya"},
+ {icon:"🏘️",name:"Yaşayış kompleksi"},
+ {icon:"🧓",name:"Ahıllar evi"},
+ {icon:"⚽",name:"İdman mərkəzi"},
+ {icon:"🚌",name:"İctimai nəqliyyat"},
+ {icon:"🌻",name:"İstirahət bağı"}
+];
+
+let playerNames=["Oyunçu 1","Oyunçu 2"];
+let scores=[0,0];
+let cities=[[],[]];
+let round=0;
+let player=0;
+let timer=25;
+let interval=null;
+let locked=false;
+
+function startGame(){
+
+ playerNames[0]=document.getElementById("name1").value.trim()||"Oyunçu 1";
+ playerNames[1]=document.getElementById("name2").value.trim()||"Oyunçu 2";
+
+ document.getElementById("startScreen").classList.add("hidden");
+ document.getElementById("gameScreen").classList.remove("hidden");
+
+ document.getElementById("display1").textContent="🔵 "+playerNames[0];
+ document.getElementById("display2").textContent="🟠 "+playerNames[1];
+
+ showQuestion();
+}
+
+function showQuestion(){
+
+ if(round>=15){finishGame();return;}
+
+ player=0;
+ renderTurn();
+}
+
+function renderTurn(){
+
+ locked=false;
+ timer=25;
+
+ document.getElementById("round").textContent="Sual "+(round+1)+" / 15";
+ document.getElementById("turnText").textContent="İndi "+playerNames[player]+" oynayır";
+ document.getElementById("cityName").textContent=playerNames[player]+"-IN ŞƏHƏRİ";
+
+ document.getElementById("player1").classList.toggle("active",player===0);
+ document.getElementById("player2").classList.toggle("active",player===1);
+
+ document.getElementById("question").textContent=questions[round].q;
+ document.getElementById("feedback").textContent="";
+ document.getElementById("nextBtn").classList.add("hidden");
+
+ document.getElementById("timer").textContent="25 saniyə";
+ document.getElementById("bar").style.width="0%";
+
+ renderCity();
+
+ const options=document.getElementById("options");
+ options.innerHTML="";
+
+ questions[round].a.forEach((answer,index)=>{
+  const btn=document.createElement("button");
+  btn.className="option";
+  btn.textContent=String.fromCharCode(65+index)+". "+answer;
+  btn.onclick=()=>chooseAnswer(index);
+  options.appendChild(btn);
+ });
+
+ startTimer();
+}
+
+function renderCity(){
+
+ const city=document.getElementById("city");
+ city.innerHTML="";
+
+ for(let i=0;i<15;i++){
+
+  const item=document.createElement("div");
+  item.className="building";
+
+  if(cities[player][i]){
+   item.innerHTML=cities[player][i].icon+
+   "<small>"+cities[player][i].name+"</small>";
+  }else{
+   item.innerHTML="<span class='city-blank'>＋</span><small>Boş sahə</small>";
+  }
+
+  city.appendChild(item);
+ }
+}
+
+function startTimer(){
+
+ clearInterval(interval);
+
+ interval=setInterval(()=>{
+  timer--;
+  document.getElementById("timer").textContent=timer+" saniyə";
+  document.getElementById("bar").style.width=((25-timer)/25*100)+"%";
+
+  if(timer<=0){
+   clearInterval(interval);
+   chooseAnswer(-1);
+  }
+ },1000);
+}
+
+function chooseAnswer(index){
+
+ if(locked)return;
+ locked=true;
+ clearInterval(interval);
+
+ const correct=questions[round].c;
+ const buttons=document.querySelectorAll(".option");
+
+ buttons.forEach((btn,i)=>{
+  btn.disabled=true;
+  if(i===correct)btn.classList.add("correct");
+  else if(i===index)btn.classList.add("wrong");
+ });
+
+ if(index===correct){
+
+  scores[player]++;
+  cities[player][round]=buildings[round];
+
+  document.getElementById("feedback").innerHTML=
+  "🎉 Düzgün cavab! "+playerNames[player]+
+  " şəhərinə yeni obyekt qazandırdı: "+
+  buildings[round].icon+" "+buildings[round].name+
+  "<br>"+questions[round].e;
+
+  renderCity();
+
+ }else{
+
+  document.getElementById("feedback").innerHTML=
+  (index===-1?"⏰ Vaxt bitdi!":"❌ Yanlış cavab.")+
+  "<br>"+questions[round].e;
+ }
+
+ document.getElementById("score1").textContent=scores[0];
+ document.getElementById("score2").textContent=scores[1];
+
+ const next=document.getElementById("nextBtn");
+ next.classList.remove("hidden");
+ next.textContent=player===0?
+ "NÖVBƏTİ: "+playerNames[1]:
+ "NÖVBƏTİ SUAL";
+}
+
+function nextTurn(){
+
+ if(player===0){
+  player=1;
+  renderTurn();
+ }else{
+  round++;
+  showQuestion();
+ }
+}
+
+function finishGame(){
+
+ clearInterval(interval);
+
+ document.getElementById("gameScreen").classList.add("hidden");
+ document.getElementById("endScreen").classList.remove("hidden");
+
+ let result="";
+
+ if(scores[0]>scores[1])result="🏆 "+playerNames[0]+" QALİBDİR!";
+ else if(scores[1]>scores[0])result="🏆 "+playerNames[1]+" QALİBDİR!";
+ else result="🤝 HEÇ-HEÇƏ!";
+
+ document.getElementById("winner").textContent=result;
+
+ document.getElementById("finalScores").textContent=
+ playerNames[0]+": "+scores[0]+" bina | "+
+ playerNames[1]+": "+scores[1]+" bina";
+
+ document.getElementById("finalName1").textContent=playerNames[0];
+ document.getElementById("finalName2").textContent=playerNames[1];
+
+ renderFinalCity(0,"finalCity1");
+ renderFinalCity(1,"finalCity2");
+}
+
+function renderFinalCity(index,id){
+
+ const city=document.getElementById(id);
+ city.innerHTML="";
+
+ for(let i=0;i<15;i++){
+  const item=document.createElement("div");
+  item.className="building";
+
+  if(cities[index][i]){
+   item.innerHTML=cities[index][i].icon+
+   "<small>"+cities[index][i].name+"</small>";
+  }else{
+   item.innerHTML="<span class='city-blank'>＋</span>";
+  }
+
+  city.appendChild(item);
+ }
+}
+
+</script>
+</body>
+</html>
